@@ -5,11 +5,9 @@ import CoreGraphics
 class BackendBridge {
     
     /// Captures the entire screen as a JPEG and saves it to a temp file.
-    /// Returns the file path.
     static func captureScreen() -> String? {
-        // Use CGWindowListCreateImage to capture the full screen natively
         guard let cgImage = CGWindowListCreateImage(
-            CGRect.null, // null = entire display
+            CGRect.null,
             .optionOnScreenOnly,
             kCGNullWindowID,
             .bestResolution
@@ -34,42 +32,82 @@ class BackendBridge {
         }
     }
     
-    /// Executes the Python backend, passing the screenshot, and returns the AI response.
+    /// Resolves the project root directory (hover_gpt/) from the executable location.
+    static func resolveProjectRoot() -> String {
+        // For Swift PM, the executable is at:
+        //   SkibidysaurusApp/.build/debug/Skibidysaurus
+        // We need to get to hover_gpt/ which is the parent of SkibidysaurusApp/
+        
+        // Strategy: Use the executable path to walk up the directory tree
+        if let execURL = Bundle.main.executableURL {
+            // .build/debug/Skibidysaurus -> .build/debug/ -> .build/ -> SkibidysaurusApp/ -> hover_gpt/
+            let projectRoot = execURL
+                .deletingLastPathComponent()  // .build/debug/
+                .deletingLastPathComponent()  // .build/
+                .deletingLastPathComponent()  // SkibidysaurusApp/
+                .deletingLastPathComponent()  // hover_gpt/
+            
+            let testPath = projectRoot.appendingPathComponent("backend.py").path
+            if FileManager.default.fileExists(atPath: testPath) {
+                return projectRoot.path
+            }
+        }
+        
+        // Fallback: Check current working directory
+        let cwd = FileManager.default.currentDirectoryPath
+        // If cwd is SkibidysaurusApp, go up one level
+        if cwd.hasSuffix("SkibidysaurusApp") {
+            let parent = URL(fileURLWithPath: cwd).deletingLastPathComponent().path
+            if FileManager.default.fileExists(atPath: parent + "/backend.py") {
+                return parent
+            }
+        }
+        
+        // If cwd itself has backend.py
+        if FileManager.default.fileExists(atPath: cwd + "/backend.py") {
+            return cwd
+        }
+        
+        // Last resort fallback
+        return cwd
+    }
+    
+    /// Executes the Python backend and returns the AI response.
     static func askSkibidysaurus(prompt: String, context: String = "", apiKey: String = "") async throws -> String {
         
-        // Step 1: Capture screen natively in Swift
+        // Step 1: Capture screen natively
         let screenshotPath = captureScreen() ?? ""
+        
+        // Step 2: Resolve paths
+        let projectRoot = resolveProjectRoot()
+        let pythonExecutable = projectRoot + "/venv/bin/python"
+        let backendScript = projectRoot + "/backend.py"
+        
+        // Debug: Print paths so we can verify
+        print("[BackendBridge] Project root: \(projectRoot)")
+        print("[BackendBridge] Python: \(pythonExecutable)")
+        print("[BackendBridge] Backend: \(backendScript)")
+        print("[BackendBridge] Python exists: \(FileManager.default.fileExists(atPath: pythonExecutable))")
+        print("[BackendBridge] Backend exists: \(FileManager.default.fileExists(atPath: backendScript))")
         
         return try await withCheckedThrowingContinuation { continuation in
             let task = Process()
             let outputPipe = Pipe()
             let errorPipe = Pipe()
             
-            // Resolve paths relative to the executable
-            let executableURL = Bundle.main.executableURL!
-            let buildDir = executableURL.deletingLastPathComponent()
-            let skibidysaurusAppDir = buildDir.deletingLastPathComponent().deletingLastPathComponent()
-            let projectRoot = skibidysaurusAppDir.deletingLastPathComponent()
-            
-            let pythonExecutable = projectRoot.appendingPathComponent("venv/bin/python").path
-            let backendScript = projectRoot.appendingPathComponent("backend.py").path
-            
             task.executableURL = URL(fileURLWithPath: pythonExecutable)
             
-            var args = [
-                backendScript,
-                "--prompt", prompt,
-                "--context", context
-            ]
-            
-            // Pass the screenshot path if capture succeeded
+            var args = [backendScript, "--prompt", prompt, "--context", context]
             if !screenshotPath.isEmpty {
                 args += ["--screenshot", screenshotPath]
             }
-            
             task.arguments = args
             
-            // Pass API key as environment variable
+            // Set the working directory to the project root
+            // This is critical so Python can find llm/ and core/ modules
+            task.currentDirectoryURL = URL(fileURLWithPath: projectRoot)
+            
+            // Pass API key
             var env = ProcessInfo.processInfo.environment
             if !apiKey.isEmpty {
                 env["GEMINI_API_KEY"] = apiKey
@@ -90,10 +128,12 @@ class BackendBridge {
                     continuation.resume(returning: output.trimmingCharacters(in: .whitespacesAndNewlines))
                 } else {
                     let errorMsg = String(data: errorData, encoding: .utf8) ?? "Unknown error"
+                    let outputMsg = String(data: outputData, encoding: .utf8) ?? ""
+                    let fullError = errorMsg + "\n" + outputMsg
                     continuation.resume(throwing: NSError(
                         domain: "BackendBridge",
                         code: Int(task.terminationStatus),
-                        userInfo: [NSLocalizedDescriptionKey: "Python backend error: \(errorMsg)"]
+                        userInfo: [NSLocalizedDescriptionKey: fullError.trimmingCharacters(in: .whitespacesAndNewlines)]
                     ))
                 }
             } catch {
