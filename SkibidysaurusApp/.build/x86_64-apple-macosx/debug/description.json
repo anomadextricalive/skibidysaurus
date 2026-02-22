@@ -1,0 +1,279 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.SkibidysaurusApp-x86_64-apple-macosx15.0-debug.module" : {
+      "executable" : "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "fileList" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/sources",
+      "importPath" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/BackendBridge.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/OverlayView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/SkibidysaurusApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "SkibidysaurusApp",
+      "moduleOutputPath" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/Modules/SkibidysaurusApp.swiftmodule",
+      "objects" : [
+        "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/BackendBridge.swift.o",
+        "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/OverlayView.swift.o",
+        "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/SkibidysaurusApp.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "x86_64-apple-macosx13.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "SkibidysaurusApp_main",
+        "-color-diagnostics",
+        "-swift-version",
+        "5",
+        "-I",
+        "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+        "-L",
+        "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+        "-plugin-path",
+        "/Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "skibidysaurusapp"
+      ],
+      "outputFileMapPath" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/BackendBridge.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/OverlayView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/SkibidysaurusApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/Modules/SkibidysaurusApp.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/BackendBridge.swift",
+        "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/OverlayView.swift",
+        "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/SkibidysaurusApp.swift"
+      ],
+      "tempsPath" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "SkibidysaurusApp" : [
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc",
+      "-module-name",
+      "SkibidysaurusApp",
+      "-package-name",
+      "skibidysaurusapp",
+      "-c",
+      "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/BackendBridge.swift",
+      "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/OverlayView.swift",
+      "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/SkibidysaurusApp.swift",
+      "-I",
+      "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/Modules",
+      "-target",
+      "x86_64-apple-macosx13.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "SkibidysaurusApp_main",
+      "-color-diagnostics",
+      "-swift-version",
+      "5",
+      "-I",
+      "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+      "-L",
+      "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+      "-plugin-path",
+      "/Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "skibidysaurusapp",
+      "-driver-use-frontend-path",
+      "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "SkibidysaurusApp" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/Skibidysaurus-entitlement.plist" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<entitlement-plist>"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<com.apple.security.get-task-allow>"
+        }
+      ],
+      "outputFilePath" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/Skibidysaurus-entitlement.plist"
+    },
+    "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/Skibidysaurus.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/BackendBridge.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/OverlayView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/SkibidysaurusApp.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/Skibidysaurus.product/Objects.LinkFileList"
+    },
+    "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/BackendBridge.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/OverlayView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/SkibidysaurusApp.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/sources"
+    },
+    "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Library/Developer/CommandLineTools/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/swift-version--1AB21518FC5DEDBE.txt"
+    }
+  }
+}

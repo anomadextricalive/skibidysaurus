@@ -22,7 +22,7 @@ class LLMManager:
         Returns the typed-out response.
         """
         system_prompt = (
-            "You are HoverGPT, a sophisticated AI assistant seamlessly integrated into the user's environment. "
+            "You are Skibidysaurus, a sophisticated AI assistant seamlessly integrated into the user's environment. "
             "You are provided with a screenshot of the user's current screen and their query. "
             "Always provide a beautifully written, highly professional, and perfectly phrased answer. "
             "Keep your output extremely clean, well-structured, and concise. "
@@ -55,10 +55,10 @@ class LLMManager:
                 )
             )
             response_text = response.text.strip()
-            print(f"[DEBUG] Gemini responded with {len(response_text)} chars: {response_text[:50]}")
+            # print(f"[DEBUG] Gemini responded with {len(response_text)} chars: {response_text[:50]}")
             return response_text
         except Exception as e:
-            print(f"[ERROR] Gemini API failed: {e}")
+            # print(f"[ERROR] Gemini API failed: {e}")
             return f"Gemini Error: {str(e)}"
 
     def _call_ollama(self, system_prompt: str, user_prompt: str, base64_image: str) -> str:

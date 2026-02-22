@@ -1,0 +1,15 @@
+name: Skibidysaurus
+options:
+  bundleIdPrefix: com.nomad
+targets:
+  Skibidysaurus:
+    type: application
+    platform: macOS
+    deploymentTarget: "13.0"
+    sources:
+      - path: SkibidysaurusApp
+    info:
+      path: Info.plist
+      properties:
+        LSUIElement: true # This hides the app from the Dock, making it Menu Bar only!
+        NSAppleEventsUsageDescription: "Skibidysaurus needs accessibility access to listen for your global hotkey."

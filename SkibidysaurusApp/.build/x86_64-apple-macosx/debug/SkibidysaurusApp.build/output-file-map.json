@@ -1,0 +1,26 @@
+{
+  "": {
+    "swift-dependencies": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/master.swiftdeps"
+  },
+  "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/BackendBridge.swift": {
+    "dependencies": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/BackendBridge.d",
+    "object": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/BackendBridge.swift.o",
+    "swiftmodule": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/BackendBridge~partial.swiftmodule",
+    "swift-dependencies": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/BackendBridge.swiftdeps",
+    "diagnostics": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/BackendBridge.dia"
+  },
+  "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/OverlayView.swift": {
+    "dependencies": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/OverlayView.d",
+    "object": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/OverlayView.swift.o",
+    "swiftmodule": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/OverlayView~partial.swiftmodule",
+    "swift-dependencies": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/OverlayView.swiftdeps",
+    "diagnostics": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/OverlayView.dia"
+  },
+  "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/SkibidysaurusApp/SkibidysaurusApp.swift": {
+    "dependencies": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/SkibidysaurusApp.d",
+    "object": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/SkibidysaurusApp.swift.o",
+    "swiftmodule": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/SkibidysaurusApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/SkibidysaurusApp.swiftdeps",
+    "diagnostics": "/Users/anomadextricalive/.gemini/antigravity/scratch/hover_gpt/SkibidysaurusApp/.build/x86_64-apple-macosx/debug/SkibidysaurusApp.build/SkibidysaurusApp.dia"
+  }
+}

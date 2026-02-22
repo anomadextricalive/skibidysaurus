@@ -34,7 +34,12 @@ class FloatingLauncher(QWidget):
     def __init__(self, trigger_col):
         super().__init__()
         self.trigger_col = trigger_col
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
+        # ToolTip ensures it doesn't show in the dock, stays on top, bypassing Mac window ordering logic
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | 
+            Qt.WindowType.WindowStaysOnTopHint | 
+            Qt.WindowType.ToolTip
+        )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         layout = QVBoxLayout()
@@ -55,7 +60,7 @@ class FloatingLauncher(QWidget):
             }
         """)
         self.btn.clicked.connect(self.on_click)
-        self.btn.setToolTip("Launch HoverGPT")
+        self.btn.setToolTip("Launch Skibidysaurus")
         
         layout.addWidget(self.btn)
         self.setLayout(layout)
@@ -63,8 +68,13 @@ class FloatingLauncher(QWidget):
         # Position at the center-right edge of the screen
         from PyQt6.QtGui import QGuiApplication
         screen = QGuiApplication.primaryScreen().geometry()
-        self.move(screen.width() - 70, screen.height() // 2 - 25)
+        
+        # Position with padding from the right edge
+        x_pos = screen.width() - 80
+        y_pos = screen.height() // 2 - 25
+        self.setGeometry(x_pos, y_pos, 50, 50)
         self.show()
+        self.raise_()
 
     def on_click(self):
         self.trigger_col()
@@ -82,13 +92,13 @@ class AppController(QObject):
 
         # Initialize System Tray
         self.tray_icon = QSystemTrayIcon(QIcon("icon.png"), self.app)
-        self.tray_icon.setToolTip("HoverGPT")
+        self.tray_icon.setToolTip("Skibidysaurus")
         
         # Create a menu for the tray
         tray_menu = QMenu()
         
-        # "Ask HoverGPT" Action
-        ask_action = QAction("Ask HoverGPT", self.app)
+        # "Ask Skibidysaurus" Action
+        ask_action = QAction("Ask Skibidysaurus", self.app)
         ask_action.triggered.connect(self.on_activate)
         tray_menu.addAction(ask_action)
         
@@ -117,7 +127,7 @@ class AppController(QObject):
         self.hotkey_timer.start(50)  # Check every 50ms
         self.hotkey_pressed_state = False
         
-        print("HoverGPT running quietly in the background! Press Cmd+Option+G anywhere to trigger.")
+        print("Skibidysaurus running quietly in the background! Press Cmd+Option+G anywhere to trigger.")
 
     def check_hotkey(self):
         from Quartz import CGEventSourceKeyState, kCGEventSourceStateHIDSystemState

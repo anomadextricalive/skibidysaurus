@@ -8,7 +8,7 @@ from dotenv import set_key, load_dotenv
 class SettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("HoverGPT Settings")
+        self.setWindowTitle("Skibidysaurus Settings")
         self.setFixedSize(400, 150)
         
         layout = QVBoxLayout(self)
@@ -74,6 +74,48 @@ class HoverOverlay(QWidget):
         # Style container for floating look
         self.container = QWidget(self)
         self.apply_theme()
+        
+        container_layout = QVBoxLayout(self.container)
+
+        self.model_selector = QComboBox()
+        self.model_selector.addItems(["gemini", "ollama"])
+        container_layout.addWidget(self.model_selector)
+        
+        self.settings_button = QPushButton("⚙")
+        self.settings_button.setToolTip("Settings")
+        self.settings_button.clicked.connect(self.open_settings)
+        self.settings_button.setStyleSheet("QPushButton { padding: 5px; border-radius: 5px; font-size: 14px; }")
+        
+        # Upper row for model and settings
+        upper_row = QHBoxLayout()
+        upper_row.addWidget(self.model_selector)
+        upper_row.addWidget(self.settings_button)
+        container_layout.addLayout(upper_row)
+
+        # Input row with text field and explicit submit button
+        input_row_layout = QHBoxLayout()
+        
+        self.input_field = QLineEdit()
+        self.input_field.setPlaceholderText("Ask Skibidysaurus (e.g., 'Make this concise')...")
+        self.input_field.returnPressed.connect(self.on_submit)
+        input_row_layout.addWidget(self.input_field)
+
+        self.submit_button = QPushButton("Submit")
+        self.submit_button.clicked.connect(self.on_submit)
+        input_row_layout.addWidget(self.submit_button)
+
+        container_layout.addLayout(input_row_layout)
+
+        # Output area
+        self.output_area = QTextEdit()
+        self.output_area.setReadOnly(True)
+        self.output_area.setPlaceholderText("Gemini's response will appear here...")
+        container_layout.addWidget(self.output_area)
+
+        layout.addWidget(self.container)
+        self.setLayout(layout)
+        self.setFixedSize(500, 450)
+
     def apply_theme(self):
         theme_name = os.environ.get("HOVERGPT_THEME", "Dark (Default)")
         
@@ -140,47 +182,6 @@ class HoverOverlay(QWidget):
         """
         self.container.setStyleSheet(style)
 
-        container_layout = QVBoxLayout(self.container)
-
-        self.model_selector = QComboBox()
-        self.model_selector.addItems(["gemini", "ollama"])
-        container_layout.addWidget(self.model_selector)
-        
-        self.settings_button = QPushButton("⚙")
-        self.settings_button.setToolTip("Settings")
-        self.settings_button.clicked.connect(self.open_settings)
-        self.settings_button.setStyleSheet("QPushButton { padding: 5px; border-radius: 5px; font-size: 14px; }")
-        
-        # Upper row for model and settings
-        upper_row = QHBoxLayout()
-        upper_row.addWidget(self.model_selector)
-        upper_row.addWidget(self.settings_button)
-        container_layout.addLayout(upper_row)
-
-        # Input row with text field and explicit submit button
-        input_row_layout = QHBoxLayout()
-        
-        self.input_field = QLineEdit()
-        self.input_field.setPlaceholderText("Ask HoverGPT (e.g., 'Make this concise')...")
-        self.input_field.returnPressed.connect(self.on_submit)
-        input_row_layout.addWidget(self.input_field)
-
-        self.submit_button = QPushButton("Submit")
-        self.submit_button.clicked.connect(self.on_submit)
-        input_row_layout.addWidget(self.submit_button)
-
-        container_layout.addLayout(input_row_layout)
-
-        # Output area
-        self.output_area = QTextEdit()
-        self.output_area.setReadOnly(True)
-        self.output_area.setPlaceholderText("Gemini's response will appear here...")
-        container_layout.addWidget(self.output_area)
-
-        layout.addWidget(self.container)
-        self.setLayout(layout)
-        self.setFixedSize(500, 450)
-
     def _position_at_cursor(self):
         from PyQt6.QtGui import QCursor
         cursor_pos = QCursor.pos()
@@ -217,7 +218,7 @@ class HoverOverlay(QWidget):
             # Pre-fill or append the selected text as context
             self.input_field.setText(f"Edit this: '{selected_text.strip()}' -> ")
             
-        self.input_field.setPlaceholderText("Ask HoverGPT (e.g., 'Make this concise')...")
+        self.input_field.setPlaceholderText("Ask Skibidysaurus (e.g., 'Make this concise')...")
         self.input_field.setFocus()
         self.submit_button.setEnabled(True)
         self.submit_button.setText("Submit")
