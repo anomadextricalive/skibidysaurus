@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Carbon.HIToolbox
 
 @main
 struct SkibidysaurusApp: App {
@@ -23,6 +24,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var overlayPanel: KeyablePanel?
     var appState = AppState()
     private var globalHotkeyMonitor: Any?
+    private var hotKeyRef: EventHotKeyRef?
+    private var hotKeyHandlerRef: EventHandlerRef?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -103,22 +106,65 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     func setupHotkey() {
+        var eventType = EventTypeSpec(
+            eventClass: OSType(kEventClassKeyboard),
+            eventKind: UInt32(kEventHotKeyPressed)
+        )
+        let userData = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        InstallEventHandler(
+            GetApplicationEventTarget(),
+            { _, _, userData in
+                guard let userData else { return noErr }
+                let appDelegate = Unmanaged<AppDelegate>.fromOpaque(userData).takeUnretainedValue()
+                appDelegate.handleGlobalHotkey()
+                return noErr
+            },
+            1,
+            &eventType,
+            userData,
+            &hotKeyHandlerRef
+        )
+
+        let signature = fourCharCode("SKBD")
+        let hotKeyID = EventHotKeyID(signature: signature, id: 1)
+        let modifiers = UInt32(cmdKey | optionKey)
+        RegisterEventHotKey(
+            UInt32(kVK_ANSI_G),
+            modifiers,
+            hotKeyID,
+            GetApplicationEventTarget(),
+            0,
+            &hotKeyRef
+        )
+
+        // fallback monitor kept for environments where hotkey registration is blocked.
         globalHotkeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            let isCommand = event.modifierFlags.contains(.command)
-            let isOption = event.modifierFlags.contains(.option)
-            
-            if isCommand && isOption && event.keyCode == 5 {
-                DispatchQueue.main.async {
-                    self?.copySelectedText()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        if let clipboardText = NSPasteboard.general.string(forType: .string) {
-                            self?.appState.contextText = clipboardText
-                        }
-                        self?.toggleOverlay()
-                    }
-                }
+            if event.modifierFlags.contains(.command),
+               event.modifierFlags.contains(.option),
+               event.keyCode == UInt16(kVK_ANSI_G) {
+                self?.handleGlobalHotkey()
             }
         }
+    }
+
+    func handleGlobalHotkey() {
+        DispatchQueue.main.async { [weak self] in
+            let previousClipboard = NSPasteboard.general.string(forType: .string)
+            self?.copySelectedText()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                guard let self else { return }
+                if let clipboardText = NSPasteboard.general.string(forType: .string),
+                   clipboardText != previousClipboard,
+                   !clipboardText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    self.appState.contextText = clipboardText
+                }
+                self.toggleOverlay()
+            }
+        }
+    }
+
+    private func fourCharCode(_ value: String) -> FourCharCode {
+        value.utf16.reduce(0) { ($0 << 8) + FourCharCode($1) }
     }
 
     @objc func quitApp() {
@@ -128,6 +174,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     func applicationWillTerminate(_ notification: Notification) {
         if let monitor = globalHotkeyMonitor {
             NSEvent.removeMonitor(monitor)
+        }
+        if let hotKeyRef {
+            UnregisterEventHotKey(hotKeyRef)
+        }
+        if let hotKeyHandlerRef {
+            RemoveEventHandler(hotKeyHandlerRef)
         }
     }
     
@@ -154,16 +206,22 @@ class AppState: ObservableObject {
     @Published var responseText: String = ""
     @Published var contextText: String = ""
     @Published var selectedModel: String = "gemini"
+    @Published var ollamaModel: String = "llava"
     @Published var apiKey: String = ""
     @Published var showSettings: Bool = false
     @Published var history: [HistoryItem] = []
     @Published var showOnboarding: Bool = false
+    @Published var attachScreenContext: Bool = true
+    @Published var shareEntireScreen: Bool = true
     
     init() {
         // Load saved API key from UserDefaults
         self.apiKey = UserDefaults.standard.string(forKey: "gemini_api_key") ?? ""
         self.selectedModel = UserDefaults.standard.string(forKey: "selected_model") ?? "gemini"
+        self.ollamaModel = UserDefaults.standard.string(forKey: "ollama_model") ?? "llava"
         self.showOnboarding = !UserDefaults.standard.bool(forKey: "did_complete_onboarding")
+        self.attachScreenContext = UserDefaults.standard.object(forKey: "attach_screen_context") as? Bool ?? true
+        self.shareEntireScreen = UserDefaults.standard.object(forKey: "share_entire_screen") as? Bool ?? true
         loadHistory()
     }
     
@@ -173,6 +231,18 @@ class AppState: ObservableObject {
 
     func saveSelectedModel() {
         UserDefaults.standard.set(selectedModel, forKey: "selected_model")
+    }
+
+    func saveOllamaModel() {
+        UserDefaults.standard.set(ollamaModel, forKey: "ollama_model")
+    }
+
+    func saveScreenSharingMode() {
+        UserDefaults.standard.set(shareEntireScreen, forKey: "share_entire_screen")
+    }
+
+    func saveAttachScreenContext() {
+        UserDefaults.standard.set(attachScreenContext, forKey: "attach_screen_context")
     }
 
     func addHistory(prompt: String, response: String) {

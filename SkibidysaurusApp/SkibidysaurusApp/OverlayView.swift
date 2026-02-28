@@ -55,6 +55,54 @@ struct OverlayView: View {
                 .help("Settings")
             }
 
+            HStack(spacing: 8) {
+                Image(systemName: "keyboard")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+                Text("summon shortcut: cmd + option + g")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.secondary)
+                Spacer()
+                if isProcessing {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(.white)
+                }
+            }
+
+            HStack(spacing: 8) {
+                Toggle(isOn: $appState.attachScreenContext) {
+                    Text("attach screen context")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                .toggleStyle(.switch)
+                .onChange(of: appState.attachScreenContext) { _ in
+                    appState.saveAttachScreenContext()
+                }
+                Spacer()
+                Text(appState.attachScreenContext ? "on submit" : "off (fastest)")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+
+            HStack(spacing: 8) {
+                Toggle(isOn: $appState.shareEntireScreen) {
+                    Text("share entire screen (includes browsers)")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                .toggleStyle(.switch)
+                .onChange(of: appState.shareEntireScreen) { _ in
+                    appState.saveScreenSharingMode()
+                }
+                .disabled(!appState.attachScreenContext)
+                Spacer()
+                Text("captured only when you submit")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+
             if appState.showOnboarding {
                 OnboardingCard {
                     appState.completeOnboarding()
@@ -100,7 +148,11 @@ struct OverlayView: View {
         .padding(16)
         .frame(width: 520)
         .frame(minHeight: 420)
-        .background(VisualEffectView(material: .hudWindow, blendingMode: .behindWindow))
+        .background(VisualEffectView(material: .menu, blendingMode: .behindWindow))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+        )
         .cornerRadius(16)
     }
 
@@ -184,6 +236,10 @@ struct OverlayView: View {
             .background(Color.black.opacity(0.35))
             .cornerRadius(8)
             .frame(maxHeight: 260)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            )
 
             if !appState.responseText.isEmpty {
                 HStack {
@@ -267,6 +323,8 @@ struct OverlayView: View {
                 }
             }
             .frame(maxHeight: 300)
+            .background(Color.black.opacity(0.2))
+            .cornerRadius(8)
         }
     }
 
@@ -278,28 +336,41 @@ struct OverlayView: View {
         appState.selectedModel == "gemini" && appState.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    func submitPrompt() {
-        guard !promptText.isEmpty else { return }
+    var captureMode: BackendBridge.ScreenCaptureMode {
+        guard appState.attachScreenContext else { return .none }
+        return appState.shareEntireScreen ? .entireDesktop : .focusedWindows
+    }
+
+    func submitPrompt(forcePrompt: String? = nil) {
+        let effectivePrompt = (forcePrompt ?? promptText).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !effectivePrompt.isEmpty else { return }
         if needsApiKey {
             appState.responseText = "Please add your Gemini API key in Settings first."
             return
         }
-        let currentPrompt = promptText
+        let currentPrompt = effectivePrompt
         let currentContext = appState.contextText
         isProcessing = true
-        appState.responseText = ""
+        if forcePrompt == nil {
+            appState.responseText = ""
+        }
 
         Task {
             do {
                 let result = try await BackendBridge.askSkibidysaurus(
                     prompt: currentPrompt,
                     context: currentContext,
-                    apiKey: appState.apiKey
+                    apiKey: appState.apiKey,
+                    captureMode: captureMode,
+                    engine: appState.selectedModel,
+                    ollamaModel: appState.ollamaModel
                 )
                 await MainActor.run {
                     appState.responseText = result
                     appState.addHistory(prompt: currentPrompt, response: result)
-                    promptText = ""
+                    if forcePrompt == nil {
+                        promptText = ""
+                    }
                     isProcessing = false
                 }
             } catch {
@@ -328,6 +399,9 @@ struct OverlayView: View {
         if msg.contains("api key") || msg.contains("gemini_api_key") {
             return "Your API key looks missing or invalid. Update it in Settings and retry."
         }
+        if msg.contains("ollama error") {
+            return rawMessage
+        }
         return "Couldn’t run the AI request. Check setup + permissions, then try again."
     }
 }
@@ -341,7 +415,7 @@ struct OnboardingCard: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(.white)
 
-            Text("1) enable screen recording\n2) add gemini key in settings\n3) hit cmd + option + g on selected text")
+            Text("1) enable screen recording\n2) add gemini key in settings\n3) hit cmd + option + g anytime")
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)
 
@@ -388,9 +462,28 @@ struct SettingsPanelView: View {
             }
 
             HStack {
+                Text("Ollama Model:")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                    .frame(width: 110, alignment: .leading)
+
+                TextField("llava", text: $appState.ollamaModel)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .padding(8)
+                    .background(Color.black.opacity(0.4))
+                    .cornerRadius(6)
+                    .foregroundColor(.white)
+                    .font(.system(size: 12))
+            }
+            Text("for screen-aware answers, use a vision model (example: llava).")
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+
+            HStack {
                 Spacer()
                 Button("Save") {
                     appState.saveApiKey()
+                    appState.saveOllamaModel()
                     appState.showSettings = false
                 }
                 .buttonStyle(.borderedProminent)

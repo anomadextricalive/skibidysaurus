@@ -3,22 +3,44 @@ import AppKit
 import CoreGraphics
 
 class BackendBridge {
+    enum ScreenCaptureMode {
+        case none
+        case focusedWindows
+        case entireDesktop
+    }
     
     /// Captures the entire screen as a JPEG and saves it to a temp file.
-    static func captureScreen() -> String? {
-        guard let cgImage = CGWindowListCreateImage(
-            CGRect.null,
-            .optionOnScreenOnly,
-            kCGNullWindowID,
-            .bestResolution
-        ) else {
+    static func captureScreen(mode: ScreenCaptureMode) -> String? {
+        let image: CGImage?
+        switch mode {
+        case .none:
+            return nil
+        case .focusedWindows:
+            image = CGWindowListCreateImage(
+                CGRect.null,
+                .optionOnScreenOnly,
+                kCGNullWindowID,
+                .bestResolution
+            )
+        case .entireDesktop:
+            image = CGWindowListCreateImage(
+                CGRect.infinite,
+                .optionAll,
+                kCGNullWindowID,
+                [.bestResolution, .boundsIgnoreFraming]
+            )
+        }
+
+        guard let cgImage = image else {
             return nil
         }
+
+        let normalizedImage = downsampleIfNeeded(cgImage, maxDimension: 1280) ?? cgImage
         
-        let bitmapRep = NSBitmapImageRep(cgImage: cgImage)
+        let bitmapRep = NSBitmapImageRep(cgImage: normalizedImage)
         guard let jpegData = bitmapRep.representation(
             using: .jpeg,
-            properties: [.compressionFactor: 0.7]
+            properties: [.compressionFactor: 0.45]
         ) else {
             return nil
         }
@@ -30,6 +52,38 @@ class BackendBridge {
         } catch {
             return nil
         }
+    }
+
+    private static func downsampleIfNeeded(_ cgImage: CGImage, maxDimension: CGFloat) -> CGImage? {
+        let width = CGFloat(cgImage.width)
+        let height = CGFloat(cgImage.height)
+        let longest = max(width, height)
+        guard longest > maxDimension else { return nil }
+
+        let scale = maxDimension / longest
+        let targetSize = NSSize(width: width * scale, height: height * scale)
+        let image = NSImage(cgImage: cgImage, size: NSSize(width: width, height: height))
+        let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(targetSize.width),
+            pixelsHigh: Int(targetSize.height),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        )
+        guard let rep else { return nil }
+
+        NSGraphicsContext.saveGraphicsState()
+        let context = NSGraphicsContext(bitmapImageRep: rep)
+        NSGraphicsContext.current = context
+        image.draw(in: NSRect(origin: .zero, size: targetSize))
+        NSGraphicsContext.restoreGraphicsState()
+
+        return rep.cgImage
     }
     
     /// Resolves the project root directory (hover_gpt/) from the executable location.
@@ -86,10 +140,17 @@ class BackendBridge {
     }
     
     /// Executes the Python backend and returns the AI response.
-    static func askSkibidysaurus(prompt: String, context: String = "", apiKey: String = "") async throws -> String {
+    static func askSkibidysaurus(
+        prompt: String,
+        context: String = "",
+        apiKey: String = "",
+        captureMode: ScreenCaptureMode = .entireDesktop,
+        engine: String = "gemini",
+        ollamaModel: String = "llava"
+    ) async throws -> String {
         
         // Step 1: Capture screen natively
-        let screenshotPath = captureScreen() ?? ""
+        let screenshotPath = captureScreen(mode: captureMode) ?? ""
         
         // Step 2: Resolve paths
         let projectRoot = resolveProjectRoot()
@@ -125,7 +186,10 @@ class BackendBridge {
             
             task.executableURL = URL(fileURLWithPath: pythonExecutable)
             
-            var args = [backendScript, "--prompt", prompt, "--context", context]
+            var args = [backendScript, "--prompt", prompt, "--context", context, "--engine", engine]
+            if engine == "ollama" {
+                args += ["--ollama-model", ollamaModel]
+            }
             if !screenshotPath.isEmpty {
                 args += ["--screenshot", screenshotPath]
             }
@@ -140,6 +204,7 @@ class BackendBridge {
             if !apiKey.isEmpty {
                 env["GEMINI_API_KEY"] = apiKey
             }
+            env["PYTHONWARNINGS"] = "ignore"
             task.environment = env
             
             task.standardOutput = outputPipe

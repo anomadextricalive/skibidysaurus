@@ -10,13 +10,21 @@ load_dotenv()
 
 class LLMManager:
     def __init__(self):
-        self.gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
+        self.gemini_client = None
+        self._init_gemini_client_if_available()
 
     def refresh_config(self):
         """Re-initializes the Gemini client if the API key environment variable changed"""
-        self.gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
+        self._init_gemini_client_if_available()
 
-    def get_response(self, prompt: str, base64_image: str, engine: str = "gemini") -> str:
+    def _init_gemini_client_if_available(self):
+        api_key = (os.environ.get("GEMINI_API_KEY", "") or "").strip()
+        if not api_key:
+            self.gemini_client = None
+            return
+        self.gemini_client = genai.Client(api_key=api_key)
+
+    def get_response(self, prompt: str, base64_image: str, engine: str = "gemini", ollama_model: str = "llava") -> str:
         """
         Sends the user prompt and screen context to the selected AI engine.
         Returns the typed-out response.
@@ -33,13 +41,17 @@ class LLMManager:
         if engine == "gemini":
             return self._call_gemini(system_prompt, prompt, base64_image)
         elif engine == "ollama":
-            # For Ollama, we check if the user has a vision model like llava installed locally.
-            return self._call_ollama(system_prompt, prompt, base64_image)
+            return self._call_ollama(system_prompt, prompt, base64_image, ollama_model)
         else:
             return "Error: Unknown AI engine selected."
 
     def _call_gemini(self, system_prompt: str, user_prompt: str, base64_image: str) -> str:
         try:
+            if self.gemini_client is None:
+                self._init_gemini_client_if_available()
+            if self.gemini_client is None:
+                return "Gemini Error: missing API key. Add it in Settings."
+
             import base64
             # Google GenAI SDK expects raw bytes for image Part
             image_bytes = base64.b64decode(base64_image)
@@ -61,22 +73,28 @@ class LLMManager:
             # print(f"[ERROR] Gemini API failed: {e}")
             return f"Gemini Error: {str(e)}"
 
-    def _call_ollama(self, system_prompt: str, user_prompt: str, base64_image: str) -> str:
+    def _call_ollama(self, system_prompt: str, user_prompt: str, base64_image: str, ollama_model: str) -> str:
         # Assuming typical local Ollama API running on port 11434
         url = "http://localhost:11434/api/generate"
+        model_name = (ollama_model or "").strip() or "llava"
         payload = {
-            "model": "llava", # Must be a vision model to understand the screenshot
+            "model": model_name,
             "system": system_prompt,
             "prompt": user_prompt,
             "images": [base64_image],
             "stream": False
         }
         try:
-            res = requests.post(url, json=payload, timeout=30)
+            res = requests.post(url, json=payload, timeout=120)
             res.raise_for_status()
             data = res.json()
-            return data.get("response", "").strip()
+            response = data.get("response", "").strip()
+            if not response:
+                return f"Ollama Error: model '{model_name}' returned an empty response."
+            return response
         except requests.exceptions.ConnectionError:
-            return "Ollama Error: Could not connect to local Ollama instance."
+            return "Ollama Error: Could not connect to local Ollama instance at http://localhost:11434."
+        except requests.exceptions.HTTPError as e:
+            return f"Ollama Error: {e}. Make sure model '{model_name}' exists (try: ollama pull {model_name})."
         except Exception as e:
             return f"Ollama Error: {str(e)}"
