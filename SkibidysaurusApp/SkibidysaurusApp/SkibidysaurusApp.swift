@@ -22,6 +22,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var statusItem: NSStatusItem?
     var overlayPanel: KeyablePanel?
     var appState = AppState()
+    private var globalHotkeyMonitor: Any?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -33,11 +34,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             button.action = #selector(toggleOverlay)
             button.target = self
         }
+        setupMenu()
         
         createOverlayPanel()
         setupHotkey()
         
         print("Skibidysaurus Swift Frontend Started!")
+    }
+
+    func setupMenu() {
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Show / Hide", action: #selector(toggleOverlay), keyEquivalent: ""))
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "Quit Skibidysaurus", action: #selector(quitApp), keyEquivalent: "q"))
+        menu.items.forEach { $0.target = self }
+        statusItem?.menu = menu
     }
     
     func createOverlayPanel() {
@@ -92,7 +103,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     func setupHotkey() {
-        NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+        globalHotkeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             let isCommand = event.modifierFlags.contains(.command)
             let isOption = event.modifierFlags.contains(.option)
             
@@ -109,6 +120,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             }
         }
     }
+
+    @objc func quitApp() {
+        NSApp.terminate(nil)
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        if let monitor = globalHotkeyMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+    }
     
     func copySelectedText() {
         let source = CGEventSource(stateID: .hidSystemState)
@@ -122,19 +143,77 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 }
 
 class AppState: ObservableObject {
+    struct HistoryItem: Identifiable, Codable {
+        let id: UUID
+        let prompt: String
+        let response: String
+        let createdAt: Date
+    }
+
     @Published var isVisible: Bool = false
     @Published var responseText: String = ""
     @Published var contextText: String = ""
     @Published var selectedModel: String = "gemini"
     @Published var apiKey: String = ""
     @Published var showSettings: Bool = false
+    @Published var history: [HistoryItem] = []
+    @Published var showOnboarding: Bool = false
     
     init() {
         // Load saved API key from UserDefaults
         self.apiKey = UserDefaults.standard.string(forKey: "gemini_api_key") ?? ""
+        self.selectedModel = UserDefaults.standard.string(forKey: "selected_model") ?? "gemini"
+        self.showOnboarding = !UserDefaults.standard.bool(forKey: "did_complete_onboarding")
+        loadHistory()
     }
     
     func saveApiKey() {
         UserDefaults.standard.set(apiKey, forKey: "gemini_api_key")
+    }
+
+    func saveSelectedModel() {
+        UserDefaults.standard.set(selectedModel, forKey: "selected_model")
+    }
+
+    func addHistory(prompt: String, response: String) {
+        let trimmedPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedResponse = response.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedPrompt.isEmpty, !trimmedResponse.isEmpty else { return }
+
+        history.insert(
+            HistoryItem(id: UUID(), prompt: trimmedPrompt, response: trimmedResponse, createdAt: Date()),
+            at: 0
+        )
+
+        if history.count > 25 {
+            history = Array(history.prefix(25))
+        }
+
+        saveHistory()
+    }
+
+    func clearHistory() {
+        history = []
+        UserDefaults.standard.removeObject(forKey: "prompt_history")
+    }
+
+    func completeOnboarding() {
+        showOnboarding = false
+        UserDefaults.standard.set(true, forKey: "did_complete_onboarding")
+    }
+
+    private func saveHistory() {
+        let encoder = JSONEncoder()
+        if let data = try? encoder.encode(history) {
+            UserDefaults.standard.set(data, forKey: "prompt_history")
+        }
+    }
+
+    private func loadHistory() {
+        guard let data = UserDefaults.standard.data(forKey: "prompt_history") else { return }
+        let decoder = JSONDecoder()
+        if let decoded = try? decoder.decode([HistoryItem].self, from: data) {
+            history = decoded
+        }
     }
 }

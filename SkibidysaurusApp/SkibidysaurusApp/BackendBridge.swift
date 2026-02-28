@@ -34,6 +34,19 @@ class BackendBridge {
     
     /// Resolves the project root directory (hover_gpt/) from the executable location.
     static func resolveProjectRoot() -> String {
+        // 1) Explicit install location from launcher script env.
+        if let installedHome = ProcessInfo.processInfo.environment["SKIBIDYSAURUS_HOME"],
+           FileManager.default.fileExists(atPath: installedHome + "/backend.py") {
+            return installedHome
+        }
+
+        // 2) Standard installed location in Application Support.
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        if let appSupportPath = appSupport?.appendingPathComponent("Skibidysaurus").path,
+           FileManager.default.fileExists(atPath: appSupportPath + "/backend.py") {
+            return appSupportPath
+        }
+
         // For Swift PM, the executable is at:
         //   SkibidysaurusApp/.build/debug/Skibidysaurus
         // We need to get to hover_gpt/ which is the parent of SkibidysaurusApp/
@@ -82,6 +95,21 @@ class BackendBridge {
         let projectRoot = resolveProjectRoot()
         let pythonExecutable = projectRoot + "/venv/bin/python"
         let backendScript = projectRoot + "/backend.py"
+
+        guard FileManager.default.fileExists(atPath: pythonExecutable) else {
+            throw NSError(
+                domain: "BackendBridge",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Python environment not found at \(pythonExecutable)"]
+            )
+        }
+        guard FileManager.default.fileExists(atPath: backendScript) else {
+            throw NSError(
+                domain: "BackendBridge",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Backend script not found at \(backendScript)"]
+            )
+        }
         
         // Debug: Print paths so we can verify
         print("[BackendBridge] Project root: \(projectRoot)")
@@ -119,22 +147,27 @@ class BackendBridge {
             
             do {
                 try task.run()
-                task.waitUntilExit()
-                
-                let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-                let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-                
-                if task.terminationStatus == 0, let output = String(data: outputData, encoding: .utf8) {
-                    continuation.resume(returning: output.trimmingCharacters(in: .whitespacesAndNewlines))
-                } else {
-                    let errorMsg = String(data: errorData, encoding: .utf8) ?? "Unknown error"
-                    let outputMsg = String(data: outputData, encoding: .utf8) ?? ""
-                    let fullError = errorMsg + "\n" + outputMsg
-                    continuation.resume(throwing: NSError(
-                        domain: "BackendBridge",
-                        code: Int(task.terminationStatus),
-                        userInfo: [NSLocalizedDescriptionKey: fullError.trimmingCharacters(in: .whitespacesAndNewlines)]
-                    ))
+                DispatchQueue.global(qos: .userInitiated).async {
+                    task.waitUntilExit()
+
+                    let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+                    let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+                    if !screenshotPath.isEmpty {
+                        try? FileManager.default.removeItem(atPath: screenshotPath)
+                    }
+
+                    if task.terminationStatus == 0, let output = String(data: outputData, encoding: .utf8) {
+                        continuation.resume(returning: output.trimmingCharacters(in: .whitespacesAndNewlines))
+                    } else {
+                        let errorMsg = String(data: errorData, encoding: .utf8) ?? "Unknown error"
+                        let outputMsg = String(data: outputData, encoding: .utf8) ?? ""
+                        let fullError = (errorMsg + "\n" + outputMsg).trimmingCharacters(in: .whitespacesAndNewlines)
+                        continuation.resume(throwing: NSError(
+                            domain: "BackendBridge",
+                            code: Int(task.terminationStatus),
+                            userInfo: [NSLocalizedDescriptionKey: fullError]
+                        ))
+                    }
                 }
             } catch {
                 continuation.resume(throwing: error)

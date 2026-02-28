@@ -1,35 +1,77 @@
-# Skibidysaurus 🚀
+# Skibidysaurus
 
-Skibidysaurus is a powerful, system-wide floating AI ghostwriter and assistant for macOS. It lives quietly in your background and immediately pops up context-aware AI directly at your cursor. Need help replying to an email? Rewriting code? Summarizing an article? Skibidysaurus reads your screen and highlighted text and provides professional, immediate answers.
+Skibidysaurus is a native macOS menu bar AI assistant.
+Use `Cmd + Option + G` on selected text to pop up context-aware AI right where you're working.
 
-### Features
-* **Ghostwriter Hotkey:** Select any text and press `Cmd + Option + G` to instantly summon the AI with the selected text as context.
-* **Context Aware:** Skibidysaurus silently captures a screenshot of your active application to help answer questions about your current work seamlessly.
-* **Floating Launcher:** A persistent floating edge button lets you trigger the AI even if you prefer not to use keyboard shortcuts.
-* **UI Themes:** Choose between Dark, Light, Neon, and Hacker aesthetics right from the settings.
-* **Native Speed:** Uses macOS APIs to seamlessly read your clipboard and screen without brittle legacy automation scripts.
+## What it does
 
-## Onboarding and Easy Setup
+- menu bar app (no dock clutter)
+- global hotkey trigger: `Cmd + Option + G`
+- grabs selected text + optional screen context
+- inline prompt + markdown response
+- response copy button + recent prompt history
+- Gemini and Ollama model toggle
 
-Skibidysaurus requires Python 3. Follow these simple steps:
+## Quick install (recommended)
 
-1. Clone or copy this repository to your local machine.
-2. Open your terminal and navigate inside the folder (`cd hover_gpt`).
-3. Run the setup script:
-   ```bash
-   bash setup.sh
-   ```
-4. Start the app:
-   ```bash
-   source venv/bin/activate
-   python main.py
-   ```
+this installs everything for you:
 
-### First Time Setup
+1. clone repo
+2. run installer
 
-* **API Key:** Click the **Settings ⚙️** icon in the UI and paste your Gemini API Key. (You can get one for free from Google AI Studio).
-* **Mac Permissions:** macOS will block terminal apps from reading your screen by default. To fix this:
-  Open **System Settings > Privacy & Security > Screen Recording**, and toggle your Terminal app (or VSCode/Cursor) to ON. This allows it to "see" your work when you trigger it!
+```bash
+git clone https://github.com/anomadextricalive/skibidysaurus
+cd skibidysaurus
+bash install_macos.sh
+```
 
-## Usage
-Simply highlight some text in *any application* and hit **Cmd + Option + G**. Or click the floating 🚀 button. The AI will pop up exactly where you are looking!
+installer does all of this automatically:
+
+- creates backend home at `~/Library/Application Support/Skibidysaurus`
+- creates python venv + installs dependencies
+- builds release Swift app
+- installs `Skibidysaurus.app` into `/Applications` (or `~/Applications` if needed)
+
+launch after install:
+
+```bash
+open -a Skibidysaurus
+```
+
+## First launch checklist
+
+1. open app from Applications
+2. grant Screen Recording permission when macOS asks
+3. open settings in app and paste your Gemini API key
+4. highlight text anywhere and press `Cmd + Option + G`
+
+## Manual install (advanced)
+
+if you want full control:
+
+```bash
+# backend setup
+python3 -m venv "$HOME/Library/Application Support/Skibidysaurus/venv"
+"$HOME/Library/Application Support/Skibidysaurus/venv/bin/pip" install -r requirements.txt
+
+# swift app build
+cd SkibidysaurusApp
+swift build -c release
+```
+
+then package/copy the app bundle manually, or use `install_macos.sh` for the bundle step.
+
+## Dev run (without install)
+
+```bash
+bash setup.sh
+source venv/bin/activate
+python main.py
+```
+
+## Troubleshooting
+
+- **app opens but no AI response:** check Gemini API key in settings.
+- **errors about python/venv:** run `bash install_macos.sh` again.
+- **no context from screen:** enable Screen Recording in macOS privacy settings.
+
