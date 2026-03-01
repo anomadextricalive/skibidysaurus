@@ -143,10 +143,14 @@ class BackendBridge {
     static func askSkibidysaurus(
         prompt: String,
         context: String = "",
-        apiKey: String = "",
+        geminiApiKey: String = "",
+        openAIApiKey: String = "",
+        anthropicApiKey: String = "",
         captureMode: ScreenCaptureMode = .entireDesktop,
         engine: String = "gemini",
-        ollamaModel: String = "llava"
+        ollamaModel: String = "llava:latest",
+        openAIModel: String = "gpt-4.1-mini",
+        claudeModel: String = "claude-3-5-haiku-latest"
     ) async throws -> String {
         
         // Step 1: Capture screen natively
@@ -186,10 +190,15 @@ class BackendBridge {
             
             task.executableURL = URL(fileURLWithPath: pythonExecutable)
             
-            var args = [backendScript, "--prompt", prompt, "--context", context, "--engine", engine]
-            if engine == "ollama" {
-                args += ["--ollama-model", ollamaModel]
-            }
+            var args = [
+                backendScript,
+                "--prompt", prompt,
+                "--context", context,
+                "--engine", engine,
+                "--ollama-model", ollamaModel,
+                "--openai-model", openAIModel,
+                "--claude-model", claudeModel
+            ]
             if !screenshotPath.isEmpty {
                 args += ["--screenshot", screenshotPath]
             }
@@ -201,8 +210,14 @@ class BackendBridge {
             
             // Pass API key
             var env = ProcessInfo.processInfo.environment
-            if !apiKey.isEmpty {
-                env["GEMINI_API_KEY"] = apiKey
+            if !geminiApiKey.isEmpty {
+                env["GEMINI_API_KEY"] = geminiApiKey
+            }
+            if !openAIApiKey.isEmpty {
+                env["OPENAI_API_KEY"] = openAIApiKey
+            }
+            if !anthropicApiKey.isEmpty {
+                env["ANTHROPIC_API_KEY"] = anthropicApiKey
             }
             env["PYTHONWARNINGS"] = "ignore"
             task.environment = env

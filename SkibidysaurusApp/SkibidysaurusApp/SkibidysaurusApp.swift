@@ -102,6 +102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             panel.setFrameOrigin(NSPoint(x: x, y: y))
             panel.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
+            appState.requestPromptFocus()
         }
     }
     
@@ -206,27 +207,40 @@ class AppState: ObservableObject {
     @Published var responseText: String = ""
     @Published var contextText: String = ""
     @Published var selectedModel: String = "gemini"
-    @Published var ollamaModel: String = "llava"
-    @Published var apiKey: String = ""
+    @Published var ollamaModel: String = "llava:latest"
+    @Published var openAIModel: String = "gpt-4.1-mini"
+    @Published var claudeModel: String = "claude-3-5-haiku-latest"
+    @Published var geminiApiKey: String = ""
+    @Published var openAIApiKey: String = ""
+    @Published var anthropicApiKey: String = ""
     @Published var showSettings: Bool = false
     @Published var history: [HistoryItem] = []
     @Published var showOnboarding: Bool = false
     @Published var attachScreenContext: Bool = true
     @Published var shareEntireScreen: Bool = true
+    @Published var voiceFocusMode: Bool = true
+    @Published var promptFocusRequestID: Int = 0
     
     init() {
         // Load saved API key from UserDefaults
-        self.apiKey = UserDefaults.standard.string(forKey: "gemini_api_key") ?? ""
+        self.geminiApiKey = UserDefaults.standard.string(forKey: "gemini_api_key") ?? ""
+        self.openAIApiKey = UserDefaults.standard.string(forKey: "openai_api_key") ?? ""
+        self.anthropicApiKey = UserDefaults.standard.string(forKey: "anthropic_api_key") ?? ""
         self.selectedModel = UserDefaults.standard.string(forKey: "selected_model") ?? "gemini"
-        self.ollamaModel = UserDefaults.standard.string(forKey: "ollama_model") ?? "llava"
+        self.ollamaModel = UserDefaults.standard.string(forKey: "ollama_model") ?? "llava:latest"
+        self.openAIModel = UserDefaults.standard.string(forKey: "openai_model") ?? "gpt-4.1-mini"
+        self.claudeModel = UserDefaults.standard.string(forKey: "claude_model") ?? "claude-3-5-haiku-latest"
         self.showOnboarding = !UserDefaults.standard.bool(forKey: "did_complete_onboarding")
         self.attachScreenContext = UserDefaults.standard.object(forKey: "attach_screen_context") as? Bool ?? true
         self.shareEntireScreen = UserDefaults.standard.object(forKey: "share_entire_screen") as? Bool ?? true
+        self.voiceFocusMode = UserDefaults.standard.object(forKey: "voice_focus_mode") as? Bool ?? true
         loadHistory()
     }
     
-    func saveApiKey() {
-        UserDefaults.standard.set(apiKey, forKey: "gemini_api_key")
+    func saveApiKeys() {
+        UserDefaults.standard.set(geminiApiKey, forKey: "gemini_api_key")
+        UserDefaults.standard.set(openAIApiKey, forKey: "openai_api_key")
+        UserDefaults.standard.set(anthropicApiKey, forKey: "anthropic_api_key")
     }
 
     func saveSelectedModel() {
@@ -237,12 +251,28 @@ class AppState: ObservableObject {
         UserDefaults.standard.set(ollamaModel, forKey: "ollama_model")
     }
 
+    func saveOpenAIModel() {
+        UserDefaults.standard.set(openAIModel, forKey: "openai_model")
+    }
+
+    func saveClaudeModel() {
+        UserDefaults.standard.set(claudeModel, forKey: "claude_model")
+    }
+
     func saveScreenSharingMode() {
         UserDefaults.standard.set(shareEntireScreen, forKey: "share_entire_screen")
     }
 
     func saveAttachScreenContext() {
         UserDefaults.standard.set(attachScreenContext, forKey: "attach_screen_context")
+    }
+
+    func saveVoiceFocusMode() {
+        UserDefaults.standard.set(voiceFocusMode, forKey: "voice_focus_mode")
+    }
+
+    func requestPromptFocus() {
+        promptFocusRequestID += 1
     }
 
     func addHistory(prompt: String, response: String) {

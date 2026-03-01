@@ -11,6 +11,7 @@ struct OverlayView: View {
     @State private var isProcessing: Bool = false
     @State private var showCopied: Bool = false
     @State private var selectedTab: OverlayTab = .chat
+    @FocusState private var promptFieldFocused: Bool
 
     private let quickActions = [
         "rewrite this to sound clear + confident",
@@ -122,9 +123,11 @@ struct OverlayView: View {
                 Picker("", selection: $appState.selectedModel) {
                     Text("Gemini").tag("gemini")
                     Text("Ollama").tag("ollama")
+                    Text("OpenAI").tag("openai")
+                    Text("Claude").tag("claude")
                 }
-                .pickerStyle(SegmentedPickerStyle())
-                .frame(width: 180)
+                .pickerStyle(MenuPickerStyle())
+                .frame(width: 140)
                 .onChange(of: appState.selectedModel) { _ in
                     appState.saveSelectedModel()
                 }
@@ -154,6 +157,12 @@ struct OverlayView: View {
                 .stroke(Color.white.opacity(0.12), lineWidth: 1)
         )
         .cornerRadius(16)
+        .onChange(of: appState.promptFocusRequestID) { _ in
+            guard appState.voiceFocusMode else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+                promptFieldFocused = true
+            }
+        }
     }
 
     private var chatView: some View {
@@ -178,6 +187,7 @@ struct OverlayView: View {
                     .cornerRadius(8)
                     .foregroundColor(.white)
                     .font(.system(size: 14))
+                    .focused($promptFieldFocused)
                     .disabled(isProcessing)
                     .onSubmit {
                         submitPrompt()
@@ -211,7 +221,7 @@ struct OverlayView: View {
             }
 
             if needsApiKey {
-                Text("add your gemini api key in settings to submit prompts.")
+                Text(missingApiKeyMessage)
                     .font(.system(size: 11))
                     .foregroundColor(.orange)
                     .padding(.horizontal, 4)
@@ -333,7 +343,29 @@ struct OverlayView: View {
     }
 
     var needsApiKey: Bool {
-        appState.selectedModel == "gemini" && appState.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        switch appState.selectedModel {
+        case "gemini":
+            return appState.geminiApiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case "openai":
+            return appState.openAIApiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case "claude":
+            return appState.anthropicApiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        default:
+            return false
+        }
+    }
+
+    var missingApiKeyMessage: String {
+        switch appState.selectedModel {
+        case "gemini":
+            return "add your gemini api key in settings to submit prompts."
+        case "openai":
+            return "add your openai api key in settings to submit prompts."
+        case "claude":
+            return "add your anthropic api key in settings to submit prompts."
+        default:
+            return "missing provider key in settings."
+        }
     }
 
     var captureMode: BackendBridge.ScreenCaptureMode {
@@ -345,7 +377,7 @@ struct OverlayView: View {
         let effectivePrompt = (forcePrompt ?? promptText).trimmingCharacters(in: .whitespacesAndNewlines)
         guard !effectivePrompt.isEmpty else { return }
         if needsApiKey {
-            appState.responseText = "Please add your Gemini API key in Settings first."
+            appState.responseText = missingApiKeyMessage
             return
         }
         let currentPrompt = effectivePrompt
@@ -360,10 +392,14 @@ struct OverlayView: View {
                 let result = try await BackendBridge.askSkibidysaurus(
                     prompt: currentPrompt,
                     context: currentContext,
-                    apiKey: appState.apiKey,
+                    geminiApiKey: appState.geminiApiKey,
+                    openAIApiKey: appState.openAIApiKey,
+                    anthropicApiKey: appState.anthropicApiKey,
                     captureMode: captureMode,
                     engine: appState.selectedModel,
-                    ollamaModel: appState.ollamaModel
+                    ollamaModel: appState.ollamaModel,
+                    openAIModel: appState.openAIModel,
+                    claudeModel: appState.claudeModel
                 )
                 await MainActor.run {
                     appState.responseText = result
@@ -397,9 +433,12 @@ struct OverlayView: View {
             return "Some Python packages are missing. Run setup.sh again to reinstall dependencies."
         }
         if msg.contains("api key") || msg.contains("gemini_api_key") {
-            return "Your API key looks missing or invalid. Update it in Settings and retry."
+            return "A provider key is missing or invalid. Update it in Settings and retry."
         }
         if msg.contains("ollama error") {
+            return rawMessage
+        }
+        if msg.contains("openai error") || msg.contains("claude error") {
             return rawMessage
         }
         return "Couldn’t run the AI request. Check setup + permissions, then try again."
@@ -415,7 +454,7 @@ struct OnboardingCard: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(.white)
 
-            Text("1) enable screen recording\n2) add gemini key in settings\n3) hit cmd + option + g anytime")
+            Text("1) enable screen recording\n2) add provider key in settings\n3) hit cmd + option + g anytime")
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)
 
@@ -452,7 +491,37 @@ struct SettingsPanelView: View {
                     .foregroundColor(.secondary)
                     .frame(width: 110, alignment: .leading)
 
-                SecureField("Paste your API key...", text: $appState.apiKey)
+                SecureField("Paste your Gemini key...", text: $appState.geminiApiKey)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .padding(8)
+                    .background(Color.black.opacity(0.4))
+                    .cornerRadius(6)
+                    .foregroundColor(.white)
+                    .font(.system(size: 12))
+            }
+
+            HStack {
+                Text("OpenAI API Key:")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                    .frame(width: 110, alignment: .leading)
+
+                SecureField("Paste your OpenAI key...", text: $appState.openAIApiKey)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .padding(8)
+                    .background(Color.black.opacity(0.4))
+                    .cornerRadius(6)
+                    .foregroundColor(.white)
+                    .font(.system(size: 12))
+            }
+
+            HStack {
+                Text("Claude API Key:")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                    .frame(width: 110, alignment: .leading)
+
+                SecureField("Paste your Anthropic key...", text: $appState.anthropicApiKey)
                     .textFieldStyle(PlainTextFieldStyle())
                     .padding(8)
                     .background(Color.black.opacity(0.4))
@@ -467,7 +536,7 @@ struct SettingsPanelView: View {
                     .foregroundColor(.secondary)
                     .frame(width: 110, alignment: .leading)
 
-                TextField("llava", text: $appState.ollamaModel)
+                TextField("llava:latest", text: $appState.ollamaModel)
                     .textFieldStyle(PlainTextFieldStyle())
                     .padding(8)
                     .background(Color.black.opacity(0.4))
@@ -475,15 +544,55 @@ struct SettingsPanelView: View {
                     .foregroundColor(.white)
                     .font(.system(size: 12))
             }
-            Text("for screen-aware answers, use a vision model (example: llava).")
+            Text("for screen-aware answers, use a vision model (example: llava:latest).")
                 .font(.system(size: 11))
                 .foregroundColor(.secondary)
 
             HStack {
+                Text("OpenAI Model:")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                    .frame(width: 110, alignment: .leading)
+
+                TextField("gpt-4.1-mini", text: $appState.openAIModel)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .padding(8)
+                    .background(Color.black.opacity(0.4))
+                    .cornerRadius(6)
+                    .foregroundColor(.white)
+                    .font(.system(size: 12))
+            }
+
+            HStack {
+                Text("Claude Model:")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                    .frame(width: 110, alignment: .leading)
+
+                TextField("claude-3-5-haiku-latest", text: $appState.claudeModel)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .padding(8)
+                    .background(Color.black.opacity(0.4))
+                    .cornerRadius(6)
+                    .foregroundColor(.white)
+                    .font(.system(size: 12))
+            }
+
+            Toggle(isOn: $appState.voiceFocusMode) {
+                Text("Voice Focus Mode (auto-focus prompt on open)")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+            }
+            .toggleStyle(.switch)
+
+            HStack {
                 Spacer()
                 Button("Save") {
-                    appState.saveApiKey()
+                    appState.saveApiKeys()
                     appState.saveOllamaModel()
+                    appState.saveOpenAIModel()
+                    appState.saveClaudeModel()
+                    appState.saveVoiceFocusMode()
                     appState.showSettings = false
                 }
                 .buttonStyle(.borderedProminent)

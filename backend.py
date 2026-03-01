@@ -8,7 +8,9 @@ def get_ai_response(
     context: str = "",
     screenshot_path: str = "",
     engine: str = "gemini",
-    ollama_model: str = "llava"
+    ollama_model: str = "llava:latest",
+    openai_model: str = "gpt-4.1-mini",
+    claude_model: str = "claude-3-5-haiku-latest",
 ):
     llm_manager = LLMManager()
     
@@ -31,7 +33,9 @@ def get_ai_response(
             full_prompt,
             base64_image,
             engine=engine,
-            ollama_model=ollama_model
+            ollama_model=ollama_model,
+            openai_model=openai_model,
+            claude_model=claude_model,
         )
         return response
     except Exception as e:
@@ -42,8 +46,17 @@ if __name__ == "__main__":
     parser.add_argument("--prompt", required=True, type=str, help="The user's query.")
     parser.add_argument("--context", required=False, type=str, default="", help="Highlighted text context.")
     parser.add_argument("--screenshot", required=False, type=str, default="", help="Path to screenshot JPEG taken by Swift.")
-    parser.add_argument("--engine", required=False, type=str, default="gemini", choices=["gemini", "ollama"], help="Inference engine.")
-    parser.add_argument("--ollama-model", required=False, type=str, default="llava", help="Local Ollama model to use.")
+    parser.add_argument(
+        "--engine",
+        required=False,
+        type=str,
+        default="gemini",
+        choices=["gemini", "ollama", "openai", "claude"],
+        help="Inference engine."
+    )
+    parser.add_argument("--ollama-model", required=False, type=str, default="llava:latest", help="Local Ollama model to use.")
+    parser.add_argument("--openai-model", required=False, type=str, default="gpt-4.1-mini", help="OpenAI model to use.")
+    parser.add_argument("--claude-model", required=False, type=str, default="claude-3-5-haiku-latest", help="Claude model to use.")
     
     args = parser.parse_args()
     
@@ -52,5 +65,7 @@ if __name__ == "__main__":
         args.context,
         args.screenshot,
         engine=args.engine,
-        ollama_model=args.ollama_model
+        ollama_model=args.ollama_model,
+        openai_model=args.openai_model,
+        claude_model=args.claude_model,
     ))

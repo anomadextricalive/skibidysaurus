@@ -10,7 +10,7 @@ Use `Cmd + Option + G` on selected text to pop up context-aware AI right where y
 - grabs selected text + optional screen context
 - inline prompt + markdown response
 - response copy button + recent prompt history
-- Gemini and Ollama model toggle
+- engine dropdown: Gemini, Ollama, OpenAI, Claude
 
 ## Quick install (recommended)
 
@@ -42,8 +42,15 @@ open -a Skibidysaurus
 
 1. open app from Applications
 2. grant Screen Recording permission when macOS asks
-3. open settings in app and paste your Gemini API key
+3. open settings and add the key for whichever provider you want (Gemini/OpenAI/Claude)
 4. highlight text anywhere and press `Cmd + Option + G`
+
+## LLM provider notes
+
+- **Ollama (local):** default model is `llava:latest` for screen-aware prompts.  
+  if you use a text-only model, Skibidysaurus auto-falls back to text mode and still responds.
+- **OpenAI:** set API key in settings, then choose `OpenAI` in the model dropdown.
+- **Claude:** set Anthropic API key in settings, then choose `Claude` in the model dropdown.
 
 ## Manual install (advanced)
 
@@ -74,4 +81,3 @@ python main.py
 - **app opens but no AI response:** check Gemini API key in settings.
 - **errors about python/venv:** run `bash install_macos.sh` again.
 - **no context from screen:** enable Screen Recording in macOS privacy settings.
-
